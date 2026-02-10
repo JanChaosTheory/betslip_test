@@ -5,20 +5,27 @@ import { cn } from "@/lib/utils";
 
 export function TabsRow() {
   return (
-    <div className="theme-transition sticky top-[57px] z-30 flex gap-1 border-b-2 border-green-600 bg-background px-4 py-2">
+    <div className="theme-transition sticky top-[57px] z-30 flex items-center gap-1 border-b border-border bg-background px-4 py-2">
       {TABS.map((tab) => (
         <button
           key={tab.id}
           type="button"
           disabled={!tab.active}
+          aria-disabled={!tab.active}
+          aria-label={tab.active ? tab.label : `${tab.label} (Coming soon)`}
           className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium",
+            "theme-transition flex min-h-[2.25rem] flex-col items-center justify-center rounded-full px-4 py-2 text-sm font-medium leading-tight",
             tab.active
-              ? "bg-green-600 text-white"
-              : "cursor-default opacity-50 select-none hover:opacity-50 focus:outline-none focus:ring-0"
+              ? "market-tab-active"
+              : "cursor-not-allowed text-muted-foreground opacity-70 select-none hover:opacity-70 focus:outline-none focus:ring-0 disabled:pointer-events-none"
           )}
         >
-          {tab.label}
+          <span className="inline-block text-center">{tab.label}</span>
+          {!tab.active && (
+            <span className="mt-0.5 block text-[9px] font-normal uppercase tracking-wide opacity-50">
+              Coming soon
+            </span>
+          )}
         </button>
       ))}
     </div>

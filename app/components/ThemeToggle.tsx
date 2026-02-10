@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "./ThemeProvider";
-import { Sun, Moon } from "lucide-react";
+import { Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SunSolidIcon } from "./SunSolidIcon";
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
@@ -24,25 +25,26 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
+      data-state={isDark ? "checked" : "unchecked"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-pressed={isDark}
       className={cn(
-        "theme-transition relative flex h-9 w-[4.25rem] shrink-0 items-center rounded-full border border-border bg-muted/90 px-1 shadow-inner",
+        "theme-toggle-track relative h-9 w-[4.25rem] shrink-0 rounded-full border border-border bg-muted/90 shadow-inner",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       )}
     >
-      <span className="flex size-8 flex-1 items-center justify-center text-muted-foreground">
-        <Sun className="size-4" />
+      <span className="theme-toggle-sun theme-toggle-icon theme-toggle-icon-left" aria-hidden>
+        <SunSolidIcon className="size-4" />
       </span>
-      <span className="flex size-8 flex-1 items-center justify-center text-muted-foreground">
-        <Moon className="size-4" />
+      <span className="theme-toggle-moon theme-toggle-icon theme-toggle-icon-right" aria-hidden>
+        <Moon className="size-4" fill="currentColor" strokeWidth={1.5} />
       </span>
       <span
         className={cn(
-          "theme-transition absolute left-0 top-0.5 z-10 size-8 rounded-full bg-background shadow-md ring-1 ring-black/10 transition-[transform] duration-200 ease-out",
+          "theme-toggle-knob absolute left-1 top-0.5 z-10 size-8 rounded-full bg-background shadow-md ring-1 ring-black/10",
           "dark:bg-zinc-600 dark:ring-white/10"
         )}
-        style={{ transform: isDark ? "translateX(30px)" : "translateX(0)" }}
       />
     </button>
   );

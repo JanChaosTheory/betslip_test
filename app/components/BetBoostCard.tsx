@@ -1,29 +1,51 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { BetBoostCard as BetBoostCardType } from "../data/match";
 
 type BetBoostCardProps = {
   card: BetBoostCardType;
+  isSelected: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
 };
 
-export function BetBoostCard({ card }: BetBoostCardProps) {
-  const [selected, setSelected] = useState(false);
+export function BetBoostCard({
+  card,
+  isSelected,
+  onToggle,
+  disabled = false,
+}: BetBoostCardProps) {
+  const handleClick = () => {
+    if (disabled) return;
+    onToggle();
+  };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onToggle();
+    }
+  };
 
   return (
     <Card
       role="button"
-      tabIndex={0}
-      onClick={() => setSelected(!selected)}
+      tabIndex={disabled ? -1 : 0}
+      aria-pressed={isSelected}
+      aria-disabled={disabled}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "theme-transition cursor-pointer",
-        selected && "ring-2 ring-green-600"
+        "bet-boost-card theme-transition cursor-pointer",
+        !disabled && "hover:bg-muted/50",
+        isSelected && "is-selected",
+        disabled && "pointer-events-none opacity-60"
       )}
     >
-      <CardContent className="p-4">
-        <span className="mb-2 inline-block rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
+      <CardContent className="px-4 pt-0 pb-4">
+        <span className="bet-boost-pill mb-2 inline-block rounded-full border-2 border-[var(--accent)] bg-[var(--accent)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide">
           BET BOOST
         </span>
         <p className="mb-3 font-medium">{card.matchTitle}</p>
@@ -36,8 +58,8 @@ export function BetBoostCard({ card }: BetBoostCardProps) {
           <span className="tabular-nums text-sm line-through text-muted-foreground">
             {card.oldOdds}
           </span>
-          <span className="text-green-600">→</span>
-          <span className="tabular-nums font-semibold text-green-600">{card.newOdds}</span>
+          <span className="text-accent">→</span>
+          <span className="odds-text">{card.newOdds}</span>
         </div>
         <p className="text-xs text-muted-foreground">{card.stakeReturns}</p>
       </CardContent>

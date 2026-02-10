@@ -20,11 +20,10 @@ export function SelectionCell({ option, selected, onToggle }: SelectionCellProps
       disabled={locked}
       onClick={locked ? undefined : onToggle}
       className={cn(
-        "theme-transition flex h-full min-h-[var(--market-row-min-h)] w-full min-w-0 items-center justify-between rounded-md border px-3 py-2 text-left",
-        "border-border bg-transparent",
+        "theme-transition flex h-full min-h-[var(--market-row-min-h)] w-full min-w-0 items-center justify-between rounded-md border border-border bg-transparent px-3 py-[7px] text-left",
         locked && "cursor-default opacity-70 hover:bg-transparent",
         !locked && "hover:bg-muted/50",
-        selected && "border-2 border-green-600 bg-green-600/15 hover:bg-green-600/20"
+        selected && "is-selected"
       )}
     >
       <span className="min-w-0 line-clamp-2 break-words text-sm font-medium leading-snug">
@@ -33,7 +32,7 @@ export function SelectionCell({ option, selected, onToggle }: SelectionCellProps
       <span className="flex shrink-0 items-center gap-1.5">
         {locked && <Lock className="size-3.5 text-muted-foreground" />}
         {showOdds && (
-          <span className="whitespace-nowrap tabular-nums font-semibold text-amber-400">
+          <span className="odds-text whitespace-nowrap">
             {option.odds}
           </span>
         )}

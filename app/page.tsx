@@ -1,23 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Header } from "./components/Header";
 import { TabsRow } from "./components/TabsRow";
 import { MarketPanel } from "./components/MarketPanel";
 import { BetBoostCard } from "./components/BetBoostCard";
-import {
-  BetSlip,
-  getStoredRemember,
-  getStoredStake,
-  setStoredStake,
-  setStoredRemember,
-  type LastResult,
-} from "./components/Betslip";
-import { SGMModal } from "./components/SGMModal";
+import { BetSlipPanel } from "./components/BetSlipPanel";
+import { useBetSlip } from "./hooks/useBetSlip";
 import { MARKETS, BET_BOOST_CARDS, FOOTER_TEXT, PAGE_TITLE } from "./data/match";
-import type { Market, Selection } from "./data/match";
-import type { RowSelection } from "./components/MarketPanel";
-import type { DisplaySelection } from "./components/BottomBetBar";
+import type { BetBoostCard as BetBoostCardType, Market, Selection } from "./data/match";
+import { useState } from "react";
 
 function getOption(market: Market, rowId: string, optionId: string) {
   const row = market.rows.find((r) => r.id === rowId);
@@ -31,89 +23,72 @@ function buildSelection(
   optionLabel: string,
   odds: string
 ): Selection {
+  const oddsNum = parseFloat(odds);
   return {
     id: `${marketId}:${optionId}`,
-    event: PAGE_TITLE,
+    eventName: PAGE_TITLE,
+    marketId,
     marketLabel: marketTitle,
+    optionId,
     optionLabel,
-    odds: parseFloat(odds) || 0,
+    odds: Number.isFinite(oddsNum) ? oddsNum : 0,
   };
 }
 
-function selectionsToRowSelections(
-  selections: Selection[],
-  markets: Market[]
-): Record<string, RowSelection> {
-  const out: Record<string, RowSelection> = {};
-  for (const market of markets) {
-    out[market.id] = Object.fromEntries(
-      market.rows.map((r) => [r.id, null as string | null])
-    );
-  }
-  for (const sel of selections) {
-    const [marketId, optionId] = sel.id.split(":");
-    if (!marketId || !optionId) continue;
-    const market = markets.find((m) => m.id === marketId);
-    if (!market) continue;
-    for (const row of market.rows) {
-      const opt = row.options.find((o) => o.id === optionId);
-      if (opt) {
-        out[marketId]![row.id] = optionId;
-        break;
-      }
-    }
-  }
-  return out;
-}
+const BET_BOOST_EVENT_ID = "linda-maya";
 
-const PLACE_BET_DELAY_MS = 750;
-const SUCCESS_MESSAGE_MS = 2500;
+function buildBoostSelection(card: BetBoostCardType): Selection {
+  const id = `boost:${BET_BOOST_EVENT_ID}:${card.id}`;
+  const oddsNum = parseFloat(card.newOdds);
+  const originalOdds = card.oldOdds ? parseFloat(card.oldOdds) : undefined;
+  return {
+    id,
+    type: "boost",
+    eventName: card.matchTitle,
+    marketId: "",
+    marketLabel: "Bet Boost",
+    optionId: card.id,
+    optionLabel: card.matchTitle,
+    odds: Number.isFinite(oddsNum) ? oddsNum : 0,
+    meta: {
+      legs: card.bullets,
+      ...(Number.isFinite(originalOdds) && originalOdds !== undefined
+        ? { originalOdds }
+        : {}),
+    },
+  };
+}
 
 export default function Home() {
   const [marketOpen, setMarketOpen] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(MARKETS.map((m) => [m.id, true]))
   );
-  const [betslipSelections, setBetSlipSelections] = useState<Selection[]>([]);
-  const [stake, setStake] = useState("");
-  const [rememberStake, setRememberStake] = useState(false);
-  const [isPlacing, setIsPlacing] = useState(false);
-  const [lastResult, setLastResult] = useState<LastResult>("idle");
-  const [sgmModalOpen, setSgmModalOpen] = useState(false);
 
-  useEffect(() => {
-    setStake(getStoredStake());
-    setRememberStake(getStoredRemember());
-  }, []);
-
-  const rowSelections = useMemo(
-    () => selectionsToRowSelections(betslipSelections, MARKETS),
-    [betslipSelections]
+  const betslip = useBetSlip();
+  const selectedIds = useMemo(
+    () => new Set(betslip.selections.map((s) => s.id)),
+    [betslip.selections]
   );
 
-  const allLegs = useMemo((): DisplaySelection[] => {
-    return betslipSelections.map((s) => ({
-      marketTitle: s.marketLabel,
-      optionLabel: s.optionLabel,
-      odds: s.odds.toFixed(2),
-    }));
-  }, [betslipSelections]);
-
-  const hasMultipleSelections = betslipSelections.length >= 2;
-
   useEffect(() => {
-    if (hasMultipleSelections) setSgmModalOpen(true);
-  }, [hasMultipleSelections]);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") betslip.close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [betslip.close]);
+
+  const handleClearSlip = useCallback(() => {
+    betslip.clearAll();
+  }, [betslip.clearAll]);
 
   const handleRowSelect = useCallback(
-    (marketId: string, rowId: string, optionId: string | null) => {
-      if (optionId === null) {
-        setBetSlipSelections([]);
-        return;
-      }
+    (marketId: string, rowId: string, optionId: string) => {
       const market = MARKETS.find((m) => m.id === marketId);
       if (!market) return;
       const opt = getOption(market, rowId, optionId);
       if (!opt || opt.locked) return;
+
       const selection = buildSelection(
         marketId,
         market.title,
@@ -121,60 +96,28 @@ export default function Home() {
         opt.label,
         opt.odds
       );
-      setBetSlipSelections([selection]);
+      betslip.toggleSelection(selection);
     },
-    []
+    [betslip.toggleSelection]
   );
 
-  const handleCloseSlip = useCallback(() => {
-    setBetSlipSelections([]);
-    setLastResult("idle");
-  }, []);
-
-  const handleStakeChange = useCallback((value: string) => {
-    setStake(value);
-    if (rememberStake) setStoredStake(value);
-  }, [rememberStake]);
-
-  const handleRememberChange = useCallback((checked: boolean) => {
-    setRememberStake(checked);
-    setStoredRemember(checked);
-    if (checked) setStoredStake(stake);
-    else setStoredStake("");
-  }, [stake]);
-
-  const handlePlaceBet = useCallback(() => {
-    const n = parseFloat(stake);
-    if (Number.isNaN(n) || n <= 0 || isPlacing || betslipSelections.length === 0)
-      return;
-    if (rememberStake) setStoredStake(stake);
-    setIsPlacing(true);
-    setLastResult("idle");
-    setTimeout(() => {
-      setLastResult("success");
-      setBetSlipSelections([]);
-      setIsPlacing(false);
-      setTimeout(() => setLastResult("idle"), SUCCESS_MESSAGE_MS);
-    }, PLACE_BET_DELAY_MS);
-  }, [stake, rememberStake, isPlacing, betslipSelections.length]);
-
-  const handleRemoveLeg = useCallback((index: number) => {
-    const leg = allLegs[index];
-    if (!leg) return;
-    setBetSlipSelections((prev) =>
-      prev.filter(
-        (s) =>
-          !(s.marketLabel === leg.marketTitle && s.optionLabel === leg.optionLabel)
-      )
-    );
-  }, [allLegs]);
+  const handleToggleBoost = useCallback(
+    (card: BetBoostCardType) => {
+      const selection = buildBoostSelection(card);
+      betslip.toggleSelection(selection);
+    },
+    [betslip.toggleSelection]
+  );
 
   return (
     <div className="theme-transition min-h-screen bg-background text-foreground">
-      <Header />
+      <Header
+        selectionCount={betslip.selections.length}
+        onOpenBetslip={betslip.open}
+      />
       <TabsRow />
 
-      <main className="mx-auto max-w-4xl pb-32">
+      <main className="mx-auto max-w-4xl">
         <div className="theme-transition border-b border-border">
           {MARKETS.map((market) => (
             <MarketPanel
@@ -184,17 +127,23 @@ export default function Home() {
               onOpenChange={(open) =>
                 setMarketOpen((prev) => ({ ...prev, [market.id]: open }))
               }
-              rowSelections={rowSelections[market.id] ?? {}}
+              selectedIds={selectedIds}
               onRowSelect={(rowId, optionId) =>
                 handleRowSelect(market.id, rowId, optionId)
               }
             >
               {market.id === "to-win-match" && (
                 <section className="theme-transition mt-4 border-t border-border pt-4">
-                  <div className="flex gap-4 overflow-x-auto pb-2">
+                  <div className="bet-boost-scroll flex gap-4">
                     {BET_BOOST_CARDS.map((card) => (
                       <div key={card.id} className="w-[280px] shrink-0">
-                        <BetBoostCard card={card} />
+                        <BetBoostCard
+                          card={card}
+                          isSelected={selectedIds.has(
+                            `boost:${BET_BOOST_EVENT_ID}:${card.id}`
+                          )}
+                          onToggle={() => handleToggleBoost(card)}
+                        />
                       </div>
                     ))}
                   </div>
@@ -210,23 +159,20 @@ export default function Home() {
         </footer>
       </main>
 
-      <BetSlip
-        selections={betslipSelections}
-        stake={stake}
-        rememberStake={rememberStake}
-        isPlacing={isPlacing}
-        lastResult={lastResult}
-        onStakeChange={handleStakeChange}
-        onRememberChange={handleRememberChange}
-        onPlaceBet={handlePlaceBet}
-        onClose={handleCloseSlip}
-      />
-
-      <SGMModal
-        open={sgmModalOpen}
-        onOpenChange={setSgmModalOpen}
-        legs={allLegs}
-        onRemoveLeg={handleRemoveLeg}
+      <BetSlipPanel
+        selections={betslip.selections}
+        isOpen={betslip.isOpen}
+        isCollapsed={betslip.isCollapsed}
+        stake={betslip.stake}
+        remember={betslip.remember}
+        status={betslip.status}
+        canPlaceBet={betslip.canPlaceBet}
+        onStakeChange={betslip.setStake}
+        onRememberChange={betslip.setRemember}
+        onPlaceBet={betslip.placeBet}
+        onToggleCollapsed={betslip.toggleCollapsed}
+        onRemoveSelection={betslip.removeSelection}
+        onClearSlip={handleClearSlip}
       />
     </div>
   );

@@ -34,13 +34,20 @@ export type Market = {
   layout?: "grid" | "table" | "doubleResult";
 };
 
-/** Betslip selection (stable id = `${marketId}:${optionId}`) */
+/** selectionId = `${marketId}:${optionId}` or `boost:${eventId}:${boostId}` */
 export type Selection = {
   id: string;
-  event: string;
+  eventName: string;
+  marketId: string;
   marketLabel: string;
+  optionId: string;
   optionLabel: string;
   odds: number;
+  type?: "boost";
+  meta?: {
+    legs: string[];
+    originalOdds?: number;
+  };
 };
 
 export const MARKETS: Market[] = [

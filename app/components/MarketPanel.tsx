@@ -20,10 +20,15 @@ type MarketPanelProps = {
   market: Market;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  rowSelections: RowSelection;
-  onRowSelect: (rowId: string, optionId: string | null) => void;
+  selectedIds: Set<string>;
+  onRowSelect: (rowId: string, optionId: string) => void;
   children?: React.ReactNode;
 };
+
+/** True if this market has a left-hand label column (e.g. "21.5", "2-0"). */
+function hasLeftLabel(market: Market): boolean {
+  return market.rows.some((r) => (r.rowLabel ?? "").trim() !== "");
+}
 
 /** Numeric row labels (e.g. totals 21.5, 6.5) use right-aligned variant for consistent alignment. */
 function isNumericLabel(value: string | undefined): boolean {
@@ -35,52 +40,58 @@ export function MarketPanel({
   market,
   open,
   onOpenChange,
-  rowSelections,
+  selectedIds,
   onRowSelect,
   children,
 }: MarketPanelProps) {
+  const marketId = market.id;
   const isTable = market.columnHeaders && market.columnHeaders.length > 0;
   const isDoubleResult = market.layout === "doubleResult";
   const isThreeCol =
     isTable &&
     market.columnHeaders!.length === 3 &&
     market.rows[0]?.options.length === 3;
+  const leftLabel = hasLeftLabel(market);
+  const isSelected = (optionId: string) => selectedIds.has(`${marketId}:${optionId}`);
 
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>
-      <div className="theme-transition border-b border-border">
+      <div className="theme-transition surface-panel border-b border-border">
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className="theme-transition flex w-full items-center justify-between rounded-none px-4 py-3"
+            className="market-title-trigger theme-transition flex w-full items-center justify-between rounded-none px-4 py-3"
           >
             <span className="truncate font-semibold">{market.title}</span>
             <span className="flex items-center gap-2">
               <ChevronDown
-                className={cn("size-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+                className={cn("size-6 shrink-0 text-foreground/80 transition-transform", open && "rotate-180")}
               />
             </span>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="px-4 pb-4">
+        <CollapsibleContent forceMount>
+          <div className="market-inner">
             {isDoubleResult ? (
               <div className="grid grid-cols-2 gap-2 pt-2">
-                {market.rows.map((row) => (
-                  <SelectionCell
-                    key={row.id}
-                    option={row.options[0]!}
-                    selected={rowSelections[row.id] === row.options[0]?.id}
-                    onToggle={() => {
-                      const current = rowSelections[row.id];
-                      const optId = row.options[0]?.id ?? null;
-                      onRowSelect(row.id, current === optId ? null : optId);
-                    }}
-                  />
-                ))}
+                {market.rows.map((row) => {
+                  const opt = row.options[0]!;
+                  return (
+                    <SelectionCell
+                      key={row.id}
+                      option={opt}
+                      selected={isSelected(opt.id)}
+                      onToggle={() => onRowSelect(row.id, opt.id)}
+                    />
+                  );
+                })}
               </div>
             ) : isTable ? (
-              <MarketGrid variant={isThreeCol ? "3col" : "2col"}>
+              <MarketGrid
+                variant={
+                  isThreeCol ? "3col" : leftLabel ? "2col" : "2colNoLabel"
+                }
+              >
                 {isThreeCol ? (
                   <>
                     <MarketRowGridHeader
@@ -92,21 +103,25 @@ export function MarketPanel({
                         market.columnHeaders![2],
                       ]}
                     />
-                    {market.rows.map((row) => (
+                    {market.rows.map((row, idx) => (
                       <MarketRowGridRow
                         key={row.id}
+                        layout="withLabel"
                         variant="label"
                         labelOrValue={row.rowLabel ?? ""}
                         leftOption={row.options[0]!}
                         rightOption={row.options[1]!}
                         thirdOption={row.options[2]}
                         rowId={row.id}
-                        rowSelections={rowSelections}
+                        marketId={marketId}
+                        selectedIds={selectedIds}
                         onRowSelect={onRowSelect}
+                        showRowSeparator={market.rows.length > 4}
+                        isFirstRow={idx === 0}
                       />
                     ))}
                   </>
-                ) : (
+                ) : leftLabel ? (
                   <>
                     <MarketRowGridHeader
                       columnCount={2}
@@ -126,9 +141,10 @@ export function MarketPanel({
                           : market.columnHeaders![1] ?? ""
                       }
                     />
-                    {market.rows.map((row) => (
+                    {market.rows.map((row, idx) => (
                       <MarketRowGridRow
                         key={row.id}
+                        layout="withLabel"
                         variant={
                           isNumericLabel(row.rowLabel) ? "numeric" : "label"
                         }
@@ -136,27 +152,67 @@ export function MarketPanel({
                         leftOption={row.options[0]!}
                         rightOption={row.options[1]!}
                         rowId={row.id}
-                        rowSelections={rowSelections}
+                        marketId={marketId}
+                        selectedIds={selectedIds}
                         onRowSelect={onRowSelect}
+                        showRowSeparator={market.rows.length > 4}
+                        isFirstRow={idx === 0}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <MarketRowGridHeader
+                      columnCount={2}
+                      noLabel
+                      label=""
+                      leftHeader={
+                        market.columnHeaders!.length >= 3
+                          ? market.columnHeaders![1] ?? ""
+                          : market.columnHeaders![0] ?? ""
+                      }
+                      rightHeader={
+                        market.columnHeaders!.length >= 3
+                          ? market.columnHeaders![2] ?? ""
+                          : market.columnHeaders![1] ?? ""
+                      }
+                    />
+                    {market.rows.map((row, idx) => (
+                      <MarketRowGridRow
+                        key={row.id}
+                        layout="noLabel"
+                        variant="label"
+                        labelOrValue=""
+                        leftOption={row.options[0]!}
+                        rightOption={row.options[1]!}
+                        rowId={row.id}
+                        marketId={marketId}
+                        selectedIds={selectedIds}
+                        onRowSelect={onRowSelect}
+                        showRowSeparator={market.rows.length > 4}
+                        isFirstRow={idx === 0}
                       />
                     ))}
                   </>
                 )}
               </MarketGrid>
             ) : (
-              <MarketGrid variant="2col">
-                {market.rows.map((row) => (
-                  <Fragment key={row.id}>
-                    <MarketRowGridRow
-                      variant="label"
-                      labelOrValue=""
-                      leftOption={row.options[0]!}
-                      rightOption={row.options[1]!}
-                      rowId={row.id}
-                      rowSelections={rowSelections}
-                      onRowSelect={onRowSelect}
-                    />
-                  </Fragment>
+              <MarketGrid variant={leftLabel ? "2col" : "2colNoLabel"}>
+                {market.rows.map((row, idx) => (
+                  <MarketRowGridRow
+                    key={row.id}
+                    layout={leftLabel ? "withLabel" : "noLabel"}
+                    variant="label"
+                    labelOrValue={row.rowLabel ?? ""}
+                    leftOption={row.options[0]!}
+                    rightOption={row.options[1]!}
+                    rowId={row.id}
+                    marketId={marketId}
+                    selectedIds={selectedIds}
+                    onRowSelect={onRowSelect}
+                    showRowSeparator={market.rows.length > 4}
+                    isFirstRow={idx === 0}
+                  />
                 ))}
               </MarketGrid>
             )}

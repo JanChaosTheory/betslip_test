@@ -14,6 +14,7 @@ type MarketRowGridHeaderProps =
       label: string;
       leftHeader: string;
       rightHeader: string;
+      noLabel?: boolean;
     }
   | {
       columnCount: 3;
@@ -22,31 +23,32 @@ type MarketRowGridHeaderProps =
     };
 
 export function MarketRowGridHeader(props: MarketRowGridHeaderProps) {
+  const headerCellClass =
+    "theme-transition flex min-w-0 items-center justify-center truncate text-xs font-semibold text-muted-foreground";
+  const headerLabelClass =
+    "market-label-cell theme-transition text-xs font-medium text-muted-foreground";
   if (props.columnCount === 2) {
+    if (props.noLabel) {
+      return (
+        <Fragment>
+          <div className={headerCellClass}>{props.leftHeader}</div>
+          <div className={headerCellClass}>{props.rightHeader}</div>
+        </Fragment>
+      );
+    }
     return (
       <Fragment>
-        <div className="market-label-cell theme-transition text-xs font-medium text-muted-foreground">
-          {props.label}
-        </div>
-        <div className="theme-transition flex min-w-0 items-center justify-center truncate text-xs font-medium text-muted-foreground">
-          {props.leftHeader}
-        </div>
-        <div className="theme-transition flex min-w-0 items-center justify-center truncate text-xs font-medium text-muted-foreground">
-          {props.rightHeader}
-        </div>
+        <div className={headerLabelClass}>{props.label}</div>
+        <div className={headerCellClass}>{props.leftHeader}</div>
+        <div className={headerCellClass}>{props.rightHeader}</div>
       </Fragment>
     );
   }
   return (
     <Fragment>
-      <div className="market-label-cell theme-transition text-xs font-medium text-muted-foreground">
-        {props.label}
-      </div>
+      <div className={headerLabelClass}>{props.label}</div>
       {props.headers.map((h) => (
-        <div
-          key={h}
-          className="theme-transition flex min-w-0 items-center justify-center truncate text-xs font-medium text-muted-foreground"
-        >
+        <div key={h} className={headerCellClass}>
           {h}
         </div>
       ))}
@@ -54,35 +56,43 @@ export function MarketRowGridHeader(props: MarketRowGridHeaderProps) {
   );
 }
 
+export type MarketRowLayout = "withLabel" | "noLabel";
+
 type MarketRowGridRowProps = {
+  layout: MarketRowLayout;
   variant: "label" | "numeric";
   labelOrValue: React.ReactNode;
   leftOption: MarketRowOption;
   rightOption: MarketRowOption;
   rowId: string;
-  rowSelections: Record<string, string | null>;
-  onRowSelect: (rowId: string, optionId: string | null) => void;
+  marketId: string;
+  selectedIds: Set<string>;
+  onRowSelect: (rowId: string, optionId: string) => void;
   thirdOption?: MarketRowOption;
+  showRowSeparator?: boolean;
+  isFirstRow?: boolean;
 };
 
 export function MarketRowGridRow({
+  layout,
   variant,
   labelOrValue,
   leftOption,
   rightOption,
   rowId,
-  rowSelections,
+  marketId,
+  selectedIds,
   onRowSelect,
   thirdOption,
+  showRowSeparator = false,
+  isFirstRow = true,
 }: MarketRowGridRowProps) {
-  const selected = rowSelections[rowId];
-  const handleToggle = (optionId: string) => {
-    onRowSelect(rowId, selected === optionId ? null : optionId);
-  };
-
+  const isSelected = (optionId: string) =>
+    selectedIds.has(`${marketId}:${optionId}`);
+  const handleClick = (optionId: string) => onRowSelect(rowId, optionId);
   const labelCell = (
     <div
-      className="market-label-cell theme-transition overflow-hidden text-sm text-muted-foreground"
+      className="market-label-cell theme-transition overflow-hidden"
       style={ROW_STYLE}
     >
       <span className="min-w-0 line-clamp-2 break-words">
@@ -95,8 +105,18 @@ export function MarketRowGridRow({
     <div key={opt.id} className="min-w-0" style={ROW_STYLE}>
       <SelectionCell
         option={opt}
-        selected={selected === opt.id}
-        onToggle={() => handleToggle(opt.id)}
+        selected={isSelected(opt.id)}
+        onToggle={() => handleClick(opt.id)}
+      />
+    </div>
+  );
+
+  const firstCellNoLabel = (
+    <div key={leftOption.id} className="min-w-0" style={ROW_STYLE}>
+      <SelectionCell
+        option={leftOption}
+        selected={isSelected(leftOption.id)}
+        onToggle={() => handleClick(leftOption.id)}
       />
     </div>
   );
@@ -108,6 +128,15 @@ export function MarketRowGridRow({
         {cell(leftOption)}
         {cell(rightOption)}
         {cell(thirdOption)}
+      </Fragment>
+    );
+  }
+
+  if (layout === "noLabel") {
+    return (
+      <Fragment>
+        {firstCellNoLabel}
+        {cell(rightOption)}
       </Fragment>
     );
   }

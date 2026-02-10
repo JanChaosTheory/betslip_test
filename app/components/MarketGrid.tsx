@@ -3,9 +3,15 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Single grid layout for all markets. Column widths never change by variant – label column is always var(--label-col). */
+/** With left label column (e.g. Set Betting, Total Games 2-Way). */
 const GRID_2COL = {
   gridTemplateColumns: "var(--label-col) minmax(0, 1fr) minmax(0, 1fr)",
+  gridAutoRows: "minmax(var(--market-row-min-h), auto)",
+} as const;
+
+/** No left label – two equal columns only (e.g. To Win Match, Match Handicap). */
+const GRID_2COL_NO_LABEL = {
+  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
   gridAutoRows: "minmax(var(--market-row-min-h), auto)",
 } as const;
 
@@ -15,7 +21,7 @@ const GRID_3COL = {
   gridAutoRows: "minmax(var(--market-row-min-h), auto)",
 } as const;
 
-export type MarketGridVariant = "2col" | "3col";
+export type MarketGridVariant = "2col" | "2colNoLabel" | "3col";
 
 type MarketGridProps = {
   variant: MarketGridVariant;
@@ -28,17 +34,23 @@ export function MarketGrid({
   className,
   children,
 }: MarketGridProps) {
+  const gridStyle =
+    variant === "3col"
+      ? GRID_3COL
+      : variant === "2colNoLabel"
+        ? GRID_2COL_NO_LABEL
+        : GRID_2COL;
   return (
     <div
       className={cn(
-        "grid gap-y-[var(--market-gap-y)] gap-x-[var(--market-gap-x)] pt-2",
+        "grid gap-y-[var(--market-gap-y)] gap-x-[var(--market-gap-x)] pt-1.5",
         className
       )}
-      style={variant === "3col" ? GRID_3COL : GRID_2COL}
+      style={gridStyle}
     >
       {children}
     </div>
   );
 }
 
-export { GRID_2COL, GRID_3COL };
+export { GRID_2COL, GRID_2COL_NO_LABEL, GRID_3COL };

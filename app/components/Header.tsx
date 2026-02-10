@@ -2,10 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { ChevronLeft, ChevronDown, Play, Bell } from "lucide-react";
+import { ChevronLeft, ChevronDown } from "lucide-react";
 import { BREADCRUMB, PAGE_TITLE, DATE_TIME } from "../data/match";
+import { cn } from "@/lib/utils";
 
-export function Header() {
+type HeaderProps = {
+  selectionCount?: number;
+  onOpenBetslip?: () => void;
+};
+
+export function Header({ selectionCount = 0, onOpenBetslip }: HeaderProps) {
+  const showBetslipPill = selectionCount > 0 && onOpenBetslip;
+
   return (
     <header className="theme-transition sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background px-4 py-3">
       <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -21,13 +29,20 @@ export function Header() {
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        {showBetslipPill && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onOpenBetslip}
+            className={cn(
+              "rounded-full font-medium",
+              "bg-primary/15 text-primary hover:bg-primary/25"
+            )}
+          >
+            Betslip ({selectionCount})
+          </Button>
+        )}
         <span className="text-sm text-muted-foreground">{DATE_TIME}</span>
-        <Button variant="ghost" size="icon" aria-label="Video">
-          <Play className="size-5" />
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <Bell className="size-5" />
-        </Button>
         <ThemeToggle />
       </div>
     </header>
