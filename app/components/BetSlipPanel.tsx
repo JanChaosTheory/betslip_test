@@ -61,15 +61,20 @@ export function BetSlipPanel({
   if (!isOpen || !hasContent) return null;
 
   return (
-    <div
-      ref={panelRef}
-      role="dialog"
-      aria-label="Betslip"
-      className={cn(
-        "theme-transition fixed z-50 flex flex-col rounded-lg border border-border bg-card shadow-xl",
-        "duration-[200ms] ease-out",
-        mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-      )}
+    <>
+      <div
+        aria-hidden
+        className="betslip-overlay fixed inset-0 z-40 pointer-events-none"
+      />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-label="Betslip"
+        className={cn(
+          "theme-transition betslip-panel--open fixed z-50 flex flex-col rounded-xl border bg-card",
+          "duration-[200ms] ease-out",
+          mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+        )}
       style={{
         bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
         right: "calc(env(safe-area-inset-right, 0px) + 16px)",
@@ -83,7 +88,7 @@ export function BetSlipPanel({
         {/* Header - entire row clickable to expand/collapse */}
         <div
           className={cn(
-            "flex shrink-0 flex-col border-b border-border px-4",
+            "betslip-panel-header flex shrink-0 flex-col border-b border-border px-4",
             selections.length > 0 ? "py-2" : "py-3"
           )}
         >
@@ -281,5 +286,6 @@ export function BetSlipPanel({
         </div>
       </Card>
     </div>
+    </>
   );
 }

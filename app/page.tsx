@@ -165,7 +165,7 @@ export default function Home() {
           selectionCount={betslip.selections.length}
           onOpenBetslip={betslip.open}
         />
-        <TabsRow ref={tabsRowRef} hidden={tabsHidden} />
+        <TabsRow ref={tabsRowRef} hidden={isMobile && tabsHidden} />
       </div>
 
       {isMobile && <div style={spacerStyle} aria-hidden />}
