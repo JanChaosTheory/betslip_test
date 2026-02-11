@@ -8,12 +8,11 @@ const SCROLL_DOWN_ACCUMULATED_THRESHOLD = 12;
 const TOGGLE_LOCK_MS = 220;
 
 /**
- * Returns true when tabs should be hidden (mobile scroll down).
- * - Desktop: always false.
+ * Returns true when tabs should be hidden (scroll down). MOBILE ONLY (< 768px).
+ * Same logic and transitions as before: no scroll listener on desktop, no jumpiness.
  * - scrollY < 24: force tabs visible.
- * - Scroll up (any delta < 0): show tabs immediately.
- * - Scroll down: hide only after accumulated down >= 12px; reset accumulator when direction changes.
- * - Lock: ignore scroll for 220ms after toggling to avoid oscillation during animation.
+ * - Scroll up: show tabs immediately.
+ * - Scroll down: hide after accumulated down >= 12px; lock 220ms after toggle.
  */
 export function useHideTabsOnScroll(): boolean {
   const isMobile = useIsMobile();
@@ -51,7 +50,10 @@ export function useHideTabsOnScroll(): boolean {
       }
     } else if (delta > 0) {
       accumulatedDown.current += delta;
-      if (accumulatedDown.current >= SCROLL_DOWN_ACCUMULATED_THRESHOLD && !hiddenRef.current) {
+      if (
+        accumulatedDown.current >= SCROLL_DOWN_ACCUMULATED_THRESHOLD &&
+        !hiddenRef.current
+      ) {
         setTabsHidden(true);
         lockUntil.current = Date.now() + TOGGLE_LOCK_MS;
       }
