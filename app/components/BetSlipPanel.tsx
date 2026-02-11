@@ -221,21 +221,29 @@ export function BetSlipPanel({
                   <label htmlFor="betslip-stake" className="text-sm text-muted-foreground">
                     Stake
                   </label>
-                  <Input
-                    id="betslip-stake"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    step={0.01}
-                    placeholder="0.00"
-                    value={stake}
-                    onChange={(e) => onStakeChange(e.target.value)}
-                    disabled={isPlacing}
-                    className={cn(
-                      "ml-auto w-24 text-right tabular-nums",
-                      "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    )}
-                  />
+                  <div className="relative ml-auto w-24">
+                    <span
+                      className="pointer-events-none absolute left-3 inset-y-0 flex items-center text-muted-foreground"
+                      aria-hidden
+                    >
+                      $
+                    </span>
+                    <Input
+                      id="betslip-stake"
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step={0.01}
+                      placeholder="0.00"
+                      value={stake}
+                      onChange={(e) => onStakeChange(e.target.value)}
+                      disabled={isPlacing}
+                      className={cn(
+                        "w-full pl-7 text-right tabular-nums",
+                        "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      )}
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
