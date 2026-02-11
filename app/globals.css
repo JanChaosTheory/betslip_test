@@ -414,6 +414,17 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   background: var(--bet-boost-scroll-thumb-hover);
 }
 
+/* Tabs row: horizontal scroll on mobile, momentum, hide scrollbar */
+.tabs-row-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs-row-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Market title hover: neutral lift, no accent */
 .market-title-trigger:hover {
   background-color: var(--hover-surface);

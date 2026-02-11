@@ -6,7 +6,9 @@ import { TabsRow } from "./components/TabsRow";
 import { MarketPanel } from "./components/MarketPanel";
 import { BetBoostCard } from "./components/BetBoostCard";
 import { BetSlipPanel } from "./components/BetSlipPanel";
+import { MobileBetslipDock } from "./components/MobileBetslipDock";
 import { useBetSlip } from "./hooks/useBetSlip";
+import { useIsMobile } from "./hooks/useMediaQuery";
 import { MARKETS, BET_BOOST_CARDS, FOOTER_TEXT, PAGE_TITLE } from "./data/match";
 import type { BetBoostCard as BetBoostCardType, Market, Selection } from "./data/match";
 import { useState } from "react";
@@ -64,6 +66,7 @@ export default function Home() {
     Object.fromEntries(MARKETS.map((m) => [m.id, true]))
   );
 
+  const isMobile = useIsMobile();
   const betslip = useBetSlip();
   const selectedIds = useMemo(
     () => new Set(betslip.selections.map((s) => s.id)),
@@ -117,7 +120,17 @@ export default function Home() {
       />
       <TabsRow />
 
-      <main className="w-full max-w-full px-4 md:mx-auto md:max-w-4xl md:px-0">
+      <main
+        className="w-full max-w-full px-4 md:mx-auto md:max-w-4xl md:px-0"
+        style={
+          isMobile && betslip.selections.length > 0
+            ? {
+                paddingBottom:
+                  "calc(80px + env(safe-area-inset-bottom, 0px))",
+              }
+            : undefined
+        }
+      >
         <div className="theme-transition min-w-0 border-b border-border">
           {MARKETS.map((market) => (
             <MarketPanel
@@ -161,6 +174,12 @@ export default function Home() {
         </footer>
       </main>
 
+      {isMobile && betslip.selections.length > 0 && !betslip.isOpen && (
+        <MobileBetslipDock
+          count={betslip.selections.length}
+          onExpand={betslip.open}
+        />
+      )}
       <BetSlipPanel
         selections={betslip.selections}
         isOpen={betslip.isOpen}

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export function TabsRow() {
   return (
     <div className="theme-transition sticky top-[57px] z-30 w-full max-w-full border-b border-border bg-background px-4 py-2">
-      <div className="mx-auto flex max-w-4xl items-center gap-1">
+      <div className="tabs-row-scroll mx-auto flex max-w-4xl flex-nowrap items-center gap-1">
       {TABS.map((tab) => (
         <button
           key={tab.id}
