@@ -274,24 +274,23 @@ export function BetSlipPanel({
       />
       {isMobile ? (
         <div
-          className="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center justify-end px-4 md:hidden"
+          ref={panelRef}
+          role="dialog"
+          aria-label="Betslip"
+          className={cn(
+            "betslip-panel--expanded theme-transition betslip-panel--open fixed left-1/2 z-50 flex flex-col rounded-xl border bg-card",
+            "duration-[200ms] ease-out",
+            mounted && isOpen ? "opacity-100" : "opacity-0"
+          )}
           style={{
-            paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+            bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+            width: "min(calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 420px)",
+            maxWidth: 420,
+            transform: `translate(-50%, ${mounted && isOpen ? 0 : 8}px)`,
+            transitionProperty: "transform, opacity",
           }}
         >
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-label="Betslip"
-            className={cn(
-              "theme-transition betslip-panel--open w-full max-w-[420px] flex flex-col rounded-xl border bg-card",
-              "duration-[200ms] ease-out",
-              mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-            )}
-            style={{ transitionProperty: "transform, opacity" }}
-          >
-            {panelContent}
-          </div>
+          {panelContent}
         </div>
       ) : (
         <div
