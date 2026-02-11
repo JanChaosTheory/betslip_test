@@ -282,9 +282,15 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
   body {
     @apply text-foreground;
     background-color: var(--background);
+    overflow-x: hidden;
+    max-width: 100%;
   }
 }
 
@@ -293,6 +299,7 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
 
 /* Shared left gutter: all market rows (label and no-label) start at same content edge */
 .market-inner {
+  min-width: 0;
   padding-left: var(--content-pad);
   padding-right: var(--content-pad);
   padding-bottom: 1rem;
@@ -378,8 +385,9 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   box-shadow: none;
 }
 
-/* Bet Boost horizontal scroll: custom scrollbar + safe padding so selection ring is never cropped */
+/* Bet Boost horizontal scroll: contained so it never causes page overflow */
 .bet-boost-scroll {
+  max-width: 100%;
   scrollbar-gutter: stable;
   overflow-x: auto;
   overflow-y: hidden;

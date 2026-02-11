@@ -15,7 +15,8 @@ export function Header({ selectionCount = 0, onOpenBetslip }: HeaderProps) {
   const showBetslipPill = selectionCount > 0 && onOpenBetslip;
 
   return (
-    <header className="theme-transition sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background px-4 py-3">
+    <header className="theme-transition sticky top-0 z-40 w-full max-w-full border-b border-border bg-background px-4 py-3">
+      <div className="mx-auto flex min-w-0 max-w-4xl items-center justify-between">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <Button variant="ghost" size="icon" className="shrink-0" aria-label="Back">
           <ChevronLeft className="size-5" />
@@ -44,6 +45,7 @@ export function Header({ selectionCount = 0, onOpenBetslip }: HeaderProps) {
         )}
         <span className="text-sm text-muted-foreground">{DATE_TIME}</span>
         <ThemeToggle />
+      </div>
       </div>
     </header>
   );
