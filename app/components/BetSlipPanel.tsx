@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import type { Selection } from "../data/match";
 import type { BetSlipStatus } from "../hooks/useBetSlip";
+import { useIsMobile } from "../hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 
 type BetSlipPanelProps = {
@@ -41,6 +42,7 @@ export function BetSlipPanel({
   onRemoveSelection,
   onClearSlip,
 }: BetSlipPanelProps) {
+  const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -60,30 +62,8 @@ export function BetSlipPanel({
 
   if (!isOpen || !hasContent) return null;
 
-  return (
-    <>
-      <div
-        aria-hidden
-        className="betslip-overlay fixed inset-0 z-40 pointer-events-none"
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-label="Betslip"
-        className={cn(
-          "theme-transition betslip-panel--open fixed z-50 flex flex-col rounded-xl border bg-card",
-          "duration-[200ms] ease-out",
-          mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-        )}
-      style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-        width: "min(calc(100vw - 32px), 420px)",
-        maxWidth: 460,
-        minWidth: 380,
-        transitionProperty: "transform, opacity",
-      }}
-    >
-      <Card className="flex flex-1 flex-col overflow-hidden border-0 shadow-none">
+  const panelContent = (
+    <Card className="flex flex-1 flex-col overflow-hidden border-0 shadow-none">
         {/* Header - entire row clickable to expand/collapse */}
         <div
           className={cn(
@@ -284,7 +264,56 @@ export function BetSlipPanel({
           )}
         </div>
       </Card>
-    </div>
+  );
+
+  return (
+    <>
+      <div
+        aria-hidden
+        className="betslip-overlay fixed inset-0 z-40 pointer-events-none"
+      />
+      {isMobile ? (
+        <div
+          className="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center justify-end px-4 md:hidden"
+          style={{
+            paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-label="Betslip"
+            className={cn(
+              "theme-transition betslip-panel--open w-full max-w-[420px] flex flex-col rounded-xl border bg-card",
+              "duration-[200ms] ease-out",
+              mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+            )}
+            style={{ transitionProperty: "transform, opacity" }}
+          >
+            {panelContent}
+          </div>
+        </div>
+      ) : (
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-label="Betslip"
+          className={cn(
+            "theme-transition betslip-panel--open fixed z-50 flex flex-col rounded-xl border bg-card",
+            "duration-[200ms] ease-out",
+            mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+          )}
+          style={{
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+            width: "min(calc(100vw - 32px), 420px)",
+            maxWidth: 460,
+            minWidth: 380,
+            transitionProperty: "transform, opacity",
+          }}
+        >
+          {panelContent}
+        </div>
+      )}
     </>
   );
 }

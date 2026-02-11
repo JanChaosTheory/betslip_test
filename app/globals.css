@@ -469,15 +469,6 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
     background-color var(--theme-duration) var(--theme-ease);
 }
 
-@media (max-width: 767px) {
-  .betslip-panel--open {
-    left: 16px;
-    right: 16px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
-
 .betslip-panel--open .betslip-panel-header {
   border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
 }
