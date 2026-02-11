@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { TabsRow } from "./components/TabsRow";
 import { MarketPanel } from "./components/MarketPanel";
 import { BetBoostCard } from "./components/BetBoostCard";
 import { BetSlipPanel } from "./components/BetSlipPanel";
+import { MobileBetslipDock } from "./components/MobileBetslipDock";
 import { useBetSlip } from "./hooks/useBetSlip";
+import { useIsMobile } from "./hooks/useMediaQuery";
+import { useHideTabsOnScroll } from "./hooks/useHideTabsOnScroll";
+import { useScrolled } from "./hooks/useScrolled";
+import { cn } from "@/lib/utils";
 import { MARKETS, BET_BOOST_CARDS, FOOTER_TEXT, PAGE_TITLE } from "./data/match";
 import type { BetBoostCard as BetBoostCardType, Market, Selection } from "./data/match";
-import { useState } from "react";
 
 function getOption(market: Market, rowId: string, optionId: string) {
   const row = market.rows.find((r) => r.id === rowId);
@@ -64,7 +68,29 @@ export default function Home() {
     Object.fromEntries(MARKETS.map((m) => [m.id, true]))
   );
 
+  const isMobile = useIsMobile();
+  const tabsHidden = useHideTabsOnScroll();
+  const isScrolled = useScrolled(4);
   const betslip = useBetSlip();
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRowRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(104);
+  const [tabsHeight, setTabsHeight] = useState(48);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mq.matches);
+    const fn = () => setPrefersReducedMotion(mq.matches);
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
+  useLayoutEffect(() => {
+    if (!isMobile) return;
+    const h = headerRef.current?.offsetHeight;
+    const t = tabsRowRef.current?.offsetHeight;
+    if (h && h > 0) setHeaderHeight(h);
+    if (t && t > 0) setTabsHeight(t);
+  }, [isMobile, tabsHidden]);
   const selectedIds = useMemo(
     () => new Set(betslip.selections.map((s) => s.id)),
     [betslip.selections]
@@ -109,15 +135,53 @@ export default function Home() {
     [betslip.toggleSelection]
   );
 
+  const spacerHeight = isMobile
+    ? tabsHidden
+      ? Math.max(0, headerHeight - tabsHeight)
+      : headerHeight
+    : undefined;
+  const spacerStyle =
+    isMobile && spacerHeight !== undefined
+      ? {
+          height: spacerHeight,
+          transition: prefersReducedMotion
+            ? "none"
+            : "height 280ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+        }
+      : undefined;
+
   return (
     <div className="theme-transition min-h-screen min-w-0 bg-background text-foreground">
-      <Header
-        selectionCount={betslip.selections.length}
-        onOpenBetslip={betslip.open}
-      />
-      <TabsRow />
+      <div
+        ref={headerRef}
+        className={cn(
+          isMobile
+            ? "fixed top-0 left-0 right-0 z-[999] w-full max-w-full bg-background"
+            : "sticky top-0 z-40 w-full max-w-full bg-background",
+          isMobile && isScrolled && "header-scrolled"
+        )}
+      >
+        <Header
+          selectionCount={betslip.selections.length}
+          onOpenBetslip={betslip.open}
+        />
+        <TabsRow ref={tabsRowRef} hidden={tabsHidden} />
+      </div>
 
-      <main className="w-full max-w-full px-4 md:mx-auto md:max-w-4xl md:px-0">
+      {isMobile && <div style={spacerStyle} aria-hidden />}
+
+      <div>
+        <main
+          className="w-full max-w-full px-4 md:mx-auto md:max-w-4xl md:px-0"
+          style={
+            isMobile && betslip.selections.length > 0
+              ? {
+                  paddingBottom:
+                    "calc(80px + env(safe-area-inset-bottom, 0px))",
+                }
+              : undefined
+          }
+        >
         <div className="theme-transition min-w-0 border-b border-border">
           {MARKETS.map((market) => (
             <MarketPanel
@@ -160,7 +224,14 @@ export default function Home() {
           <span className="inline-block rotate-0">▼</span>
         </footer>
       </main>
+      </div>
 
+      {isMobile && betslip.selections.length > 0 && !betslip.isOpen && (
+        <MobileBetslipDock
+          count={betslip.selections.length}
+          onExpand={betslip.open}
+        />
+      )}
       <BetSlipPanel
         selections={betslip.selections}
         isOpen={betslip.isOpen}

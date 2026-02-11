@@ -8,6 +8,7 @@ import {
   setStoredStake,
   setStoredRemember,
 } from "../components/Betslip";
+import { useIsMobile } from "./useMediaQuery";
 
 export type BetSlipStatus = "idle" | "placing" | "success" | "error";
 
@@ -15,6 +16,7 @@ const PLACE_BET_DELAY_MS = 800;
 const SUCCESS_VISIBLE_MS = 1200;
 
 export function useBetSlip() {
+  const isMobile = useIsMobile();
   const [selections, setSelections] = useState<Selection[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -54,13 +56,13 @@ export function useBetSlip() {
         if (next.length === 0) setIsOpen(false);
         return next;
       }
-      if (prev.length === 0) {
+      if (prev.length === 0 && !isMobile) {
         setIsOpen(true);
         setIsCollapsed(false);
       }
       return [...prev, selection];
     });
-  }, []);
+  }, [isMobile]);
 
   const removeSelection = useCallback((id: string) => {
     setSelections((prev) => {

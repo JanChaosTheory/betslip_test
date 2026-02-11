@@ -294,6 +294,14 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   }
 }
 
+/* Header: subtle shadow when scrolled (content under it) */
+.header-scrolled {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.dark .header-scrolled {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* Market panels: height/opacity/transform animated in JS (MarketAccordionContent).
    Body is NOT inside Radix CollapsibleContent so it never gets hidden/display:none. */
 
@@ -412,6 +420,17 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
 
 .bet-boost-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--bet-boost-scroll-thumb-hover);
+}
+
+/* Tabs row: horizontal scroll on mobile, momentum, hide scrollbar */
+.tabs-row-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs-row-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 /* Market title hover: neutral lift, no accent */
