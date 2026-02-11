@@ -272,47 +272,28 @@ export function BetSlipPanel({
         aria-hidden
         className="betslip-overlay fixed inset-0 z-40 pointer-events-none"
       />
-      {isMobile ? (
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-label="Betslip"
-          className={cn(
-            "betslip-panel--expanded theme-transition betslip-panel--open fixed left-1/2 z-50 flex flex-col rounded-xl border bg-card",
-            "duration-[200ms] ease-out",
-            mounted && isOpen ? "opacity-100" : "opacity-0"
-          )}
-          style={{
-            bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
-            width: "min(calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 420px)",
-            maxWidth: 420,
-            transform: `translate(-50%, ${mounted && isOpen ? 0 : 8}px)`,
-            transitionProperty: "transform, opacity",
-          }}
-        >
-          {panelContent}
-        </div>
-      ) : (
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-label="Betslip"
-          className={cn(
-            "theme-transition betslip-panel--open fixed z-50 flex flex-col rounded-xl border bg-card",
-            "duration-[200ms] ease-out",
-            mounted && isOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-          )}
-          style={{
-            bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-            width: "min(calc(100vw - 32px), 420px)",
-            maxWidth: 460,
-            minWidth: 380,
-            transitionProperty: "transform, opacity",
-          }}
-        >
-          {panelContent}
-        </div>
-      )}
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-label="Betslip"
+        className={cn(
+          "betslip-panel--expanded theme-transition betslip-panel--open fixed left-1/2 z-50 flex flex-col rounded-xl border bg-card",
+          "duration-[200ms] ease-out",
+          mounted && isOpen ? "opacity-100" : "opacity-0"
+        )}
+        style={{
+          bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          width: isMobile
+            ? "min(calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 420px)"
+            : "min(calc(100vw - 32px), 420px)",
+          maxWidth: isMobile ? 420 : 460,
+          minWidth: isMobile ? undefined : 380,
+          transform: `translate(-50%, ${mounted && isOpen ? 0 : 8}px)`,
+          transitionProperty: "transform, opacity",
+        }}
+      >
+        {panelContent}
+      </div>
     </>
   );
 }
