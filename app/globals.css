@@ -294,6 +294,14 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   }
 }
 
+/* Header: subtle shadow when scrolled (content under it) */
+.header-scrolled {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.dark .header-scrolled {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* Market panels: height/opacity/transform animated in JS (MarketAccordionContent).
    Body is NOT inside Radix CollapsibleContent so it never gets hidden/display:none. */
 
