@@ -27,35 +27,38 @@ export function MobileBetslipDock({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label="Expand betslip"
-      onClick={onExpand}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onExpand();
-        }
-      }}
-      className={cn(
-        "theme-transition fixed bottom-0 left-0 right-0 z-40 flex cursor-pointer items-center justify-between border-t border-border bg-card px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        "min-h-[56px] py-3 transition-[opacity,transform] duration-200 ease-out",
-        "md:hidden",
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-        className
-      )}
+      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 md:hidden"
       style={{
         paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <span className="text-sm font-semibold">
-        Betslip
-        <span className="ml-1.5 text-muted-foreground">({count})</span>
-      </span>
-      <span className="flex shrink-0 items-center justify-center" aria-hidden>
-        <ChevronUp className="size-5 text-muted-foreground" />
-      </span>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Expand betslip"
+        onClick={onExpand}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onExpand();
+          }
+        }}
+        className={cn(
+          "theme-transition w-full max-w-[520px] flex cursor-pointer items-center justify-between rounded-t-lg border border-b-0 border-border bg-card px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+          "min-h-[56px] py-3 transition-[opacity,transform] duration-200 ease-out",
+          visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+          className
+        )}
+      >
+        <span className="text-sm font-semibold">
+          Betslip
+          <span className="ml-1.5 text-muted-foreground">({count})</span>
+        </span>
+        <span className="flex shrink-0 items-center justify-center" aria-hidden>
+          <ChevronUp className="size-5 text-muted-foreground" />
+        </span>
+      </div>
     </div>
   );
 }

@@ -74,7 +74,7 @@ export default function Home() {
   const betslip = useBetSlip();
   const headerRef = useRef<HTMLDivElement>(null);
   const tabsRowRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(104);
+  const [headerHeight, setHeaderHeight] = useState(152);
   const [tabsHeight, setTabsHeight] = useState(48);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   useLayoutEffect(() => {
@@ -85,11 +85,18 @@ export default function Home() {
     return () => mq.removeEventListener("change", fn);
   }, []);
   useLayoutEffect(() => {
-    if (!isMobile) return;
-    const h = headerRef.current?.offsetHeight;
-    const t = tabsRowRef.current?.offsetHeight;
-    if (h && h > 0) setHeaderHeight(h);
-    if (t && t > 0) setTabsHeight(t);
+    const updateHeights = () => {
+      const h = headerRef.current?.offsetHeight;
+      const t = tabsRowRef.current?.offsetHeight;
+      if (h != null && h > 0) setHeaderHeight(h);
+      if (t != null && t > 0) setTabsHeight(t);
+    };
+    updateHeights();
+    const el = headerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(updateHeights);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [isMobile, tabsHidden]);
   const selectedIds = useMemo(
     () => new Set(betslip.selections.map((s) => s.id)),
@@ -140,15 +147,6 @@ export default function Home() {
       ? Math.max(0, headerHeight - tabsHeight)
       : headerHeight
     : undefined;
-  const spacerStyle =
-    isMobile && spacerHeight !== undefined
-      ? {
-          height: spacerHeight,
-          transition: prefersReducedMotion
-            ? "none"
-            : "height 280ms cubic-bezier(0.25, 0.1, 0.25, 1)",
-        }
-      : undefined;
 
   return (
     <div className="theme-transition min-h-screen min-w-0 bg-background text-foreground">
@@ -168,9 +166,18 @@ export default function Home() {
         <TabsRow ref={tabsRowRef} hidden={isMobile && tabsHidden} />
       </div>
 
-      {isMobile && <div style={spacerStyle} aria-hidden />}
-
-      <div>
+      <div
+        style={
+          isMobile && spacerHeight !== undefined
+            ? {
+                paddingTop: spacerHeight,
+                transition: prefersReducedMotion
+                  ? undefined
+                  : "padding-top 280ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+              }
+            : undefined
+        }
+      >
         <main
           className="w-full max-w-full px-4 md:mx-auto md:max-w-4xl md:px-0"
           style={

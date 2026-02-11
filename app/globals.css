@@ -457,6 +457,12 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   }
 }
 
+/* Betslip panel (expanded): horizontal centering + safe area */
+.betslip-panel--expanded {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
 /* Betslip panel (open state): surface, outline, elevation; token-based */
 .betslip-panel--open {
   border-width: 2px;
