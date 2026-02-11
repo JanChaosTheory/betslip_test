@@ -110,15 +110,15 @@ export default function Home() {
   );
 
   return (
-    <div className="theme-transition min-h-screen bg-background text-foreground">
+    <div className="theme-transition min-h-screen min-w-0 bg-background text-foreground">
       <Header
         selectionCount={betslip.selections.length}
         onOpenBetslip={betslip.open}
       />
       <TabsRow />
 
-      <main className="mx-auto max-w-4xl">
-        <div className="theme-transition border-b border-border">
+      <main className="w-full max-w-full px-4 md:mx-auto md:max-w-4xl md:px-0">
+        <div className="theme-transition min-w-0 border-b border-border">
           {MARKETS.map((market) => (
             <MarketPanel
               key={market.id}
@@ -133,19 +133,21 @@ export default function Home() {
               }
             >
               {market.id === "to-win-match" && (
-                <section className="theme-transition mt-4 border-t border-border pt-4">
-                  <div className="bet-boost-scroll flex gap-4">
-                    {BET_BOOST_CARDS.map((card) => (
-                      <div key={card.id} className="w-[280px] shrink-0">
-                        <BetBoostCard
-                          card={card}
-                          isSelected={selectedIds.has(
-                            `boost:${BET_BOOST_EVENT_ID}:${card.id}`
-                          )}
-                          onToggle={() => handleToggleBoost(card)}
-                        />
-                      </div>
-                    ))}
+                <section className="theme-transition mt-4 min-w-0 border-t border-border pt-4">
+                  <div className="max-w-full overflow-hidden">
+                    <div className="bet-boost-scroll flex gap-4">
+                      {BET_BOOST_CARDS.map((card) => (
+                        <div key={card.id} className="min-w-[280px] shrink-0">
+                          <BetBoostCard
+                            card={card}
+                            isSelected={selectedIds.has(
+                              `boost:${BET_BOOST_EVENT_ID}:${card.id}`
+                            )}
+                            onToggle={() => handleToggleBoost(card)}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </section>
               )}
@@ -153,7 +155,7 @@ export default function Home() {
           ))}
         </div>
 
-        <footer className="theme-transition flex items-center justify-center gap-1 border-t border-border py-3 text-center text-xs text-muted-foreground">
+        <footer className="theme-transition flex min-w-0 items-center justify-center gap-1 border-t border-border py-3 text-center text-xs text-muted-foreground">
           <span>{FOOTER_TEXT}</span>
           <span className="inline-block rotate-0">▼</span>
         </footer>
