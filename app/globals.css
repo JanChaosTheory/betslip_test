@@ -127,14 +127,14 @@ html.theme-switching * {
 
 /* Theme toggle must keep animating (knob + track + icons) when switching */
 html.theme-switching .theme-toggle-track {
-  transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out, color 200ms ease-in-out, transform 200ms ease-in-out !important;
+  transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out, color 200ms ease-in-out !important;
 }
 html.theme-switching .theme-toggle-track .theme-toggle-knob {
   transition: transform 200ms ease-in-out, background-color 200ms ease-in-out, box-shadow 200ms ease-in-out !important;
 }
 html.theme-switching .theme-toggle-track .theme-toggle-sun,
 html.theme-switching .theme-toggle-track .theme-toggle-moon {
-  transition: opacity 200ms ease-out, transform 200ms ease-out, color 200ms ease-out !important;
+  transition: opacity 200ms ease-out, color 200ms ease-out !important;
 }
 
 /* Only key containers: cards, bet boxes, separators (NOT html/body) */
@@ -146,23 +146,26 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
     box-shadow var(--theme-duration) var(--theme-ease);
 }
 
-/* Theme toggle: knob slide + track/knob color, synced 200ms ease-in-out */
+/* Theme toggle: fixed geometry, thumb inside track, icons never clip */
 .theme-toggle-track {
   transition:
     background-color var(--toggle-duration) var(--toggle-ease),
     border-color var(--toggle-duration) var(--toggle-ease),
-    color var(--toggle-duration) var(--toggle-ease),
-    transform var(--toggle-duration) var(--toggle-ease);
+    color var(--toggle-duration) var(--toggle-ease);
 }
 
-.theme-toggle-track:active {
-  transform: scale(1.02);
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-track,
+  .theme-toggle-track .theme-toggle-knob,
+  .theme-toggle-track .theme-toggle-icon {
+    transition: none;
+  }
 }
 
-/* Knob position driven by data-state only (same DOM node, no conditional render) */
+/* Thumb: top-1 left-1, size-8. dx = 68 - 32 - 2*4 = 28px */
 .theme-toggle-knob {
   transition:
-    transform var(--toggle-duration) var(--toggle-ease),
+    transform 200ms ease-out,
     background-color var(--toggle-duration) var(--toggle-ease),
     box-shadow var(--toggle-duration) var(--toggle-ease);
   transform: translateX(0);
@@ -172,35 +175,14 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   transform: translateX(0);
 }
 
-/* Track w-[4.25rem]=68px, px-1=4px each side, knob size-8=32px → translateX(68-4-4-32)=28px */
 .theme-toggle-track[data-state="checked"] .theme-toggle-knob {
   transform: translateX(28px);
 }
 
-/* Icons: always in DOM, absolute position, crossfade with opacity (never 0) */
+/* Icons: positioned left-2 / right-2 in component, opacity only (no scale to avoid jump) */
 .theme-toggle-icon {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--foreground);
-  transition:
-    opacity 200ms ease-out,
-    transform 200ms ease-out,
-    color 200ms ease-out;
-  pointer-events: none;
-}
-
-.theme-toggle-icon-left {
-  left: 0;
-  width: 50%;
-}
-
-.theme-toggle-icon-right {
-  right: 0;
-  width: 50%;
+  transition: opacity 200ms ease-out;
 }
 
 .theme-toggle-sun svg,
@@ -208,22 +190,18 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   color: inherit;
 }
 
-/* Active icon: full opacity; inactive: soft but always visible (never 0) */
+/* Left = light (sun), right = dark (moon). Inactive icon opacity 0.35 (never 0) */
 .theme-toggle-track[data-state="unchecked"] .theme-toggle-sun {
   opacity: 1;
-  transform: scale(1);
 }
 .theme-toggle-track[data-state="unchecked"] .theme-toggle-moon {
   opacity: 0.35;
-  transform: scale(0.95);
 }
 .theme-toggle-track[data-state="checked"] .theme-toggle-sun {
   opacity: 0.35;
-  transform: scale(0.95);
 }
 .theme-toggle-track[data-state="checked"] .theme-toggle-moon {
   opacity: 1;
-  transform: scale(1);
 }
 
 /* Radix Switch: track + thumb animate via data-state, no snap */
@@ -310,19 +288,8 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
   }
 }
 
-/* Market panels: smooth expand/collapse (both directions) */
-[data-slot="collapsible-content"] {
-  overflow: hidden;
-  transition: max-height 280ms ease-out;
-}
-
-[data-slot="collapsible-content"][data-state="open"] {
-  max-height: 2000px;
-}
-
-[data-slot="collapsible-content"][data-state="closed"] {
-  max-height: 0;
-}
+/* Market panels: height/opacity/transform animated in JS (MarketAccordionContent).
+   Body is NOT inside Radix CollapsibleContent so it never gets hidden/display:none. */
 
 /* Shared left gutter: all market rows (label and no-label) start at same content edge */
 .market-inner {

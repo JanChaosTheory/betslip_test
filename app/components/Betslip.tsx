@@ -87,18 +87,26 @@ export function BetSlip({
               <label htmlFor="betslip-stake" className="sr-only">
                 Stake
               </label>
-              <Input
-                id="betslip-stake"
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step={0.01}
-                placeholder="Stake"
-                value={stake}
-                onChange={(e) => onStakeChange(e.target.value)}
-                disabled={status === "placing"}
-                className="h-9 w-24 rounded-full"
-              />
+              <div className="relative w-24">
+                <span
+                  className="pointer-events-none absolute left-3 inset-y-0 flex items-center text-muted-foreground"
+                  aria-hidden
+                >
+                  $
+                </span>
+                <Input
+                  id="betslip-stake"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step={0.01}
+                  placeholder="Stake"
+                  value={stake}
+                  onChange={(e) => onStakeChange(e.target.value)}
+                  disabled={status === "placing"}
+                  className="h-9 w-full rounded-full pl-7"
+                />
+              </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Switch

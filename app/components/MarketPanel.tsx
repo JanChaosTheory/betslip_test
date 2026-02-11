@@ -1,11 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { SelectionCell } from "./SelectionCell";
@@ -15,6 +11,119 @@ import { cn } from "@/lib/utils";
 import type { Market } from "../data/match";
 
 export type RowSelection = Record<string, string | null>;
+
+/** Apple-like accordion timing and easing (no bounce, calm). */
+const DURATION_OPEN_MS = 250;
+const DURATION_CLOSE_MS = 200;
+const EASING_OPEN = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+const EASING_CLOSE = "cubic-bezier(0.4, 0.0, 0.6, 1)";
+const CHEVRON_DURATION_MS = 220;
+const HEIGHT_TRANSITION = `height ${DURATION_CLOSE_MS}ms ${EASING_CLOSE}`;
+
+type MarketAccordionContentProps = {
+  open: boolean;
+  children: React.ReactNode;
+};
+
+/**
+ * Animated accordion body: content stays in DOM; height + opacity + translateY
+ * animated with measured px height. Respects prefers-reduced-motion and
+ * cancels in-flight transitions on rapid toggle.
+ */
+function MarketAccordionContent({ open, children }: MarketAccordionContentProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const openRef = useRef(open);
+  const genRef = useRef(0);
+
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mq.matches);
+    const fn = () => setPrefersReducedMotion(mq.matches);
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
+
+  openRef.current = open;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const inner = innerRef.current;
+    if (!container || !inner) return;
+
+    const durationOpen = prefersReducedMotion ? 0 : DURATION_OPEN_MS;
+    const durationClose = prefersReducedMotion ? 0 : DURATION_CLOSE_MS;
+    genRef.current += 1;
+    const gen = genRef.current;
+
+    if (open) {
+      container.style.height = "0px";
+      container.style.overflow = "hidden";
+      inner.style.opacity = "0.96";
+      inner.style.transform = "translateY(-2px)";
+
+      const onTransitionEnd = () => {
+        if (genRef.current !== gen || !openRef.current) return;
+        container.style.transition = "none";
+        container.style.height = "auto";
+        requestAnimationFrame(() => {
+          if (genRef.current !== gen) return;
+          container.style.transition = "";
+        });
+      };
+
+      requestAnimationFrame(() => {
+        if (genRef.current !== gen) return;
+        const h = inner.scrollHeight;
+        container.style.transition = `height ${durationOpen}ms ${EASING_OPEN}`;
+        container.style.height = `${h}px`;
+        inner.style.transition = `opacity ${durationOpen}ms ${EASING_OPEN}, transform ${durationOpen}ms ${EASING_OPEN}`;
+        inner.style.opacity = "1";
+        inner.style.transform = "translateY(0)";
+        container.addEventListener("transitionend", onTransitionEnd, { once: true });
+      });
+    } else {
+      // Collapse: 2-frame operation so browser sees transition. Radix must NOT wrap this
+      // (no CollapsibleContent) or it sets hidden/display:none and kills the animation.
+      container.style.overflow = "hidden";
+      container.style.transition = "none";
+      const lockedHeight = inner.scrollHeight;
+      container.style.height = `${lockedHeight}px`;
+      container.getBoundingClientRect(); // force reflow so lock is applied
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("[accordion collapse]", {
+          lockedHeight,
+          computedTransition: window.getComputedStyle(container).transition,
+          heightAfterLock: container.style.height,
+        });
+      }
+
+      // Double rAF: step 2 in next frame so height 0 is a separate paint from the lock
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (genRef.current !== gen) return;
+          container.style.transition = prefersReducedMotion ? "none" : HEIGHT_TRANSITION;
+          inner.style.transition =
+            prefersReducedMotion ? "none" : `opacity ${durationClose}ms ${EASING_CLOSE}, transform ${durationClose}ms ${EASING_CLOSE}`;
+          inner.style.opacity = "0.96";
+          inner.style.transform = "translateY(-2px)";
+          container.style.height = "0px";
+          if (process.env.NODE_ENV === "development") {
+            console.log("[accordion collapse] set height 0");
+          }
+        });
+      });
+    }
+  }, [open, prefersReducedMotion]);
+
+  return (
+    <div ref={containerRef} style={{ overflow: "hidden" }} aria-hidden={!open}>
+      <div ref={innerRef}>{children}</div>
+    </div>
+  );
+}
 
 type MarketPanelProps = {
   market: Market;
@@ -65,12 +174,19 @@ export function MarketPanel({
             <span className="truncate font-semibold">{market.title}</span>
             <span className="flex items-center gap-2">
               <ChevronDown
-                className={cn("size-6 shrink-0 text-foreground/80 transition-transform", open && "rotate-180")}
+                className={cn(
+                  "size-6 shrink-0 text-foreground/80 transition-transform duration-[220ms]",
+                  open && "rotate-180"
+                )}
+                style={{
+                  transitionDuration: `${CHEVRON_DURATION_MS}ms`,
+                  transitionTimingFunction: EASING_OPEN,
+                }}
               />
             </span>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent forceMount>
+        <MarketAccordionContent open={open}>
           <div className="market-inner">
             {isDoubleResult ? (
               <div className="grid grid-cols-2 gap-2 pt-2">
@@ -218,7 +334,7 @@ export function MarketPanel({
             )}
             {children}
           </div>
-        </CollapsibleContent>
+        </MarketAccordionContent>
       </div>
     </Collapsible>
   );
