@@ -459,6 +459,7 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
 
 /* Betslip panel (open state): surface, outline, elevation; token-based */
 .betslip-panel--open {
+  right: calc(env(safe-area-inset-right, 0px) + 16px);
   border-width: 2px;
   border-color: color-mix(in srgb, var(--foreground) 26%, transparent);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
@@ -466,6 +467,15 @@ html.theme-switching .theme-toggle-track .theme-toggle-moon {
     border-color var(--theme-duration) var(--theme-ease),
     box-shadow var(--theme-duration) var(--theme-ease),
     background-color var(--theme-duration) var(--theme-ease);
+}
+
+@media (max-width: 767px) {
+  .betslip-panel--open {
+    left: 16px;
+    right: 16px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .betslip-panel--open .betslip-panel-header {
